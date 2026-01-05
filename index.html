@@ -1,139 +1,74 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" class="notranslate" translate="no">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="google" content="notranslate">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>كاشف الحلال - النسخة المستقرة</title>
+    <title>اختبار اتصال الذكاء الاصطناعي</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Tajawal', sans-serif; background-color: #f8fafc; }
-        .result-visible { display: block !important; animation: fadeIn 0.8s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
 </head>
-<body class="min-h-screen flex flex-col items-center p-4">
+<body class="bg-slate-100 min-h-screen flex flex-col items-center justify-center p-4">
 
-    <div class="w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden">
-        <div class="bg-gradient-to-r from-emerald-600 to-emerald-700 p-8 text-center text-white">
-            <h1 class="text-3xl font-black mb-2">كاشف الحلال الذكي</h1>
-            <p class="text-emerald-100 opacity-90 text-sm">فحص فوري ودقيق للمكونات</p>
+    <div class="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center">
+        <h1 class="text-2xl font-black mb-6">فحص اتصال Gemini AI</h1>
+        
+        <div id="testStatus" class="mb-6 p-4 bg-slate-100 rounded-xl text-slate-600 font-bold">
+            اضغط على الزر لإرسال طلب فحص وهمي
         </div>
 
-        <div class="p-8 space-y-6">
-            <div id="cameraZone" class="w-full aspect-square bg-slate-50 rounded-[2.5rem] border-4 border-dashed border-emerald-100 flex flex-col items-center justify-center cursor-pointer hover:border-emerald-400 transition-all relative overflow-hidden group">
-                <img id="imgPreview" class="absolute inset-0 w-full h-full object-cover hidden">
-                <div id="cameraUI" class="text-center group-hover:scale-110 transition-transform">
-                    <span class="text-5xl block mb-4">📸</span>
-                    <p class="text-emerald-800 font-bold">اضغط لتصوير الملصق</p>
-                </div>
-            </div>
+        <button id="runTest" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black shadow-lg hover:bg-blue-700 transition-all">
+            تشغيل اختبار الاتصال الآن
+        </button>
 
-            <input type="file" id="fileInput" accept="image/*" capture="environment" class="hidden">
-
-            <div id="loadingStatus" class="hidden text-center py-6">
-                <div class="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p class="text-emerald-700 font-black animate-pulse">الذكاء الاصطناعي يحلل البيانات الآن...</p>
-            </div>
-
-            <div id="resultBox" class="hidden p-6 rounded-3xl border-2 bg-white shadow-xl">
-                <div id="statusHeader" class="text-center text-2xl font-black mb-6 py-3 rounded-2xl text-white shadow-md"></div>
-                
-                <div class="space-y-4">
-                    <div class="bg-slate-50 p-4 rounded-xl border border-gray-100">
-                        <h4 class="text-xs font-bold text-gray-400 mb-2 uppercase">النتيجة والسبب:</h4>
-                        <p id="reasonContent" class="text-gray-800 leading-relaxed font-bold text-right"></p>
-                    </div>
-                </div>
-
-                <button onclick="location.reload()" class="w-full mt-8 py-4 bg-slate-800 text-white rounded-2xl font-black hover:bg-slate-700 transition-colors">فحص منتج آخر</button>
-            </div>
+        <div id="log" class="mt-6 text-right text-xs font-mono bg-black text-green-400 p-4 rounded-lg overflow-auto max-h-40 hidden">
+            جاري تشغيل السجل...
         </div>
     </div>
 
     <script type="module">
         import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
-        
-        const API_KEY = "AIzaSyDbDukl9gI5f5LUNM5pwT5K0JhKu6-iss8"; // مفتاحك الفعال
 
-        const fileInp = document.getElementById('fileInput');
-        const camZone = document.getElementById('cameraZone');
-        
-        camZone.onclick = () => fileInp.click();
+        // المفتاح الخاص بك للتجربة
+        const API_KEY = "AIzaSyDbDukl9gI5f5LUNM5pwT5K0JhKu6-iss8";
 
-        fileInp.onchange = (e) => {
-            const file = e.target.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                document.getElementById('imgPreview').src = ev.target.result;
-                document.getElementById('imgPreview').classList.remove('hidden');
-                document.getElementById('cameraUI').classList.add('hidden');
-                startDetection(ev.target.result.split(',')[1]);
-            };
-            reader.readAsDataURL(file);
-        };
+        document.getElementById('runTest').onclick = async () => {
+            const status = document.getElementById('testStatus');
+            const log = document.getElementById('log');
+            const btn = document.getElementById('runTest');
 
-        async function startDetection(base64Image) {
-            const loader = document.getElementById('loadingStatus');
-            const resultArea = document.getElementById('resultBox');
-            loader.classList.remove('hidden');
-            resultArea.classList.add('hidden');
+            status.innerText = "⏳ جاري الاتصال بجوجل...";
+            status.className = "mb-6 p-4 bg-amber-100 text-amber-700 rounded-xl font-bold animate-pulse";
+            log.classList.remove('hidden');
+            btn.disabled = true;
 
             try {
                 const genAI = new GoogleGenerativeAI(API_KEY);
                 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+                // اختبار نصي بسيط بدون صورة للتأكد من صلاحية المفتاح
+                const prompt = "Say the word 'SUCCESS' if you can hear me.";
                 
-                // طلب رد واضح جداً لمنع أي لبس برمجياً
-                const prompt = "Act as a Halal expert. Analyze these ingredients. Respond ONLY in JSON: {\"status\": \"halal\"|\"haram\"|\"doubtful\", \"msg\": \"Detailed Arabic response\"}";
+                log.innerHTML += "> إرسال طلب نصي للموديل...<br>";
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                const text = response.text();
 
-                const result = await model.generateContent([
-                    prompt, 
-                    { inlineData: { data: base64Image, mimeType: "image/jpeg" } }
-                ]);
+                log.innerHTML += "> استلام الرد: " + text + "<br>";
 
-                const responseText = await result.response.text();
-                
-                // تنظيف الرد من أي علامات Markdown
-                const cleanJson = responseText.replace(/```json|```/g, "").trim();
-                const data = JSON.parse(cleanJson);
-
-                updateUI(data);
+                if (text.includes("SUCCESS")) {
+                    status.innerText = "✅ نجح الاتصال! المفتاح يعمل بشكل ممتاز.";
+                    status.className = "mb-6 p-4 bg-emerald-100 text-emerald-700 rounded-xl font-bold";
+                } else {
+                    status.innerText = "⚠️ تم الاتصال ولكن الرد غير متوقع.";
+                }
 
             } catch (error) {
-                console.error("AI Error:", error);
-                alert("عذراً، لم يستطع النظام تحليل الصورة. تأكد من إغلاق المترجم وتصوير المكونات بوضوح.");
+                log.innerHTML += "<span class='text-red-500'>> خطأ: " + error.message + "</span><br>";
+                status.innerText = "❌ فشل الاتصال. تأكد من إعدادات المفتاح.";
+                status.className = "mb-6 p-4 bg-red-100 text-red-700 rounded-xl font-bold";
+                console.error(error);
             } finally {
-                loader.classList.add('hidden');
+                btn.disabled = false;
             }
-        }
-
-        function updateUI(data) {
-            const resBox = document.getElementById('resultBox');
-            const header = document.getElementById('statusHeader');
-            const reason = document.getElementById('reasonContent');
-
-            // إعداد الألوان والرسائل بناءً على النتيجة 
-            if(data.status === 'halal') {
-                header.innerText = "حلال ✅";
-                header.className = "text-center text-2xl font-black mb-6 py-3 rounded-2xl text-white shadow-md bg-emerald-600";
-                resBox.style.borderColor = "#059669";
-            } else if(data.status === 'haram') {
-                header.innerText = "غير حلال ❌";
-                header.className = "text-center text-2xl font-black mb-6 py-3 rounded-2xl text-white shadow-md bg-red-600";
-                resBox.style.borderColor = "#dc2626";
-            } else {
-                header.innerText = "مشتبه به ⚠️";
-                header.className = "text-center text-2xl font-black mb-6 py-3 rounded-2xl text-white shadow-md bg-amber-500";
-                resBox.style.borderColor = "#d97706";
-            }
-
-            reason.innerText = data.msg;
-            resBox.classList.remove('hidden');
-            resBox.classList.add('result-visible');
-            resBox.scrollIntoView({ behavior: 'smooth' });
-        }
+        };
     </script>
 </body>
 </html>
